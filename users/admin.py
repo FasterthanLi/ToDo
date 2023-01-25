@@ -1,12 +1,8 @@
 from django.contrib import admin
-from .models import User
+from django.contrib.auth import get_user_model
 
 class UserAdmin(admin.ModelAdmin):
-    fields = ('email', 'phone_number', 'is_active', 'is_admin', 'is_staff', 'is_superuser')
-    list_display = ('email', 'phone_number', 'is_active', 'is_admin', 'is_staff', 'is_superuser')
-    def save_model(self, request, obj, form, change):
-        obj.set_password(obj.password)
-        super().save_model(request, obj, form, change)
-
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+    fields = ('email', 'phone_number', 'password', 'is_active', 'is_admin', 'is_staff', 'is_superuser')
+    list_display = ('email', 'phone_number', 'password', 'is_active', 'is_admin', 'is_staff', 'is_superuser')   
+    
+admin.site.register(get_user_model(), UserAdmin)
