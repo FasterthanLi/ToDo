@@ -6,7 +6,9 @@ class UserManager(BaseUserManager):
             raise ValueError("Users must have an email address")
         if not phone_number:
             raise ValueError("Users must have a phone number")
-        
+        if not password:
+            raise ValueError("Users must have a password")
+            
         user = self.model(
             email=self.normalize_email(email),
             phone_number=phone_number,
