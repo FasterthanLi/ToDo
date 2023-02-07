@@ -4,10 +4,12 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from .models import User
 
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'phone_number', 'is_active', 'is_admin', 'is_staff', 'is_superuser')
+        fields = ('email', 'phone_number', 'password')
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()

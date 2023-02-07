@@ -1,16 +1,13 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.contrib.auth import get_user_model
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from . import serializers
 from rest_framework import views
 from rest_framework import permissions
 from rest_framework import status
-from .serializers import LoginSerializer, PasswordChangeSerializer
-from django.contrib.auth import logout
-
+from .serializers import  UserSerializer, LoginSerializer, PasswordChangeSerializer
+from .models import User
 
 class GetView(views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -71,3 +68,19 @@ class PasswordChangeView(APIView):
                 return Response({"error": "Incorrect password"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class SignUpView(views.APIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = UserSerializer
+   
+    def post(self, request, format=None):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = User.objects.create_user(
+                email=serializer.data.get('email'),
+                password=serializer.data.get('password'),
+                phone_number=serializer.data.get('phone_number'),
+            )
+            user.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
