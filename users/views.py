@@ -8,7 +8,7 @@ from . import serializers
 from rest_framework import views
 from rest_framework import permissions
 from rest_framework import status
-from .serializers import LoginSerializer
+from .serializers import LoginSerializer, PasswordChangeSerializer
 from django.contrib.auth import logout
 
 
@@ -20,7 +20,6 @@ class GetView(views.APIView):
             'message': 'Hello, you are authenticated!',
             'email': request.user.email,
             'phone_number': request.user.phone_number,
-
         }
         return Response(data)
 
@@ -49,3 +48,26 @@ class LogoutView(views.APIView):
     def get(self, request, *args, **kwargs):
         logout(request)
         return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)
+
+
+class PasswordChangeView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = PasswordChangeSerializer
+    
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordChangeSerializer(data=request.data)
+        if serializer.is_valid():
+            old_password = serializer.data.get("old_password")
+            new_password = serializer.data.get("new_password")
+            confirm_new_password = serializer.data.get("confirm_new_password")
+            if new_password != confirm_new_password:
+                return Response({"error": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+            user = request.user
+            if user.check_password(old_password):
+                user.set_password(new_password)
+                user.save()
+                return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Incorrect password"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
