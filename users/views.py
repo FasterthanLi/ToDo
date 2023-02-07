@@ -1,28 +1,51 @@
 from django.contrib.auth import authenticate, login
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import viewsets
 from django.contrib.auth import get_user_model
-from .serializers import UserSerializer
-
-class UserViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
-    queryset = get_user_model().objects.all()
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        user.set_password(self.request.data['password'])
-        user.save()
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from . import serializers
+from rest_framework import views
+from rest_framework import permissions
+from rest_framework import status
+from .serializers import LoginSerializer
+from django.contrib.auth import logout
 
 
-class LoginView(APIView):
-    def post(self, request, *args, **kwargs):
-        email = request.data.get("email")
-        phone_number = request.data.get("phone_number")
-        password = request.data.get("password")
-        user = authenticate(request, email=email, phone_number=phone_number, password=password)
-        if user is not None:
-            login(request, user)
-            return Response(status=200, data={"detail":"Success"})
+class GetView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        data = {
+            'message': 'Hello, you are authenticated!',
+            'email': request.user.email,
+            'phone_number': request.user.phone_number,
+
+        }
+        return Response(data)
+
+class LoginView(views.APIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = LoginSerializer
+
+    def post(self, request, format=None):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+            password = serializer.validated_data.get('password')
+            user = authenticate(email=email, password=password)
+            if user is not None and user.is_active:
+                login(request, user)
+                return Response(status=status.HTTP_202_ACCEPTED)
+            else:
+                return Response({"error": "Login failed"}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return Response(status=400, data={"detail":"Invalid credentials"})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LogoutView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)

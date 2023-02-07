@@ -28,9 +28,13 @@ INSTALLED_APPS = [
 
     # Third-party apps
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
 
     #Local app
     'users.apps.UsersConfig',
+    'tasks.apps.TasksConfig',
+    'testcelery.apps.TestceleryConfig',
 ]
 
 MIDDLEWARE = [
@@ -118,3 +122,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'users.backends.EmailOrPhoneNumberModelBackend']
+
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [  
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
+}
