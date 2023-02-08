@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
 
-    #Local app
+    #Local apps
     'users.apps.UsersConfig',
     'tasks.apps.TasksConfig',
     'testcelery.apps.TestceleryConfig',
@@ -131,3 +131,6 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
     ],
 }
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
