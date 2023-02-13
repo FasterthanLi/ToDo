@@ -5,15 +5,18 @@ from .serializers import TaskSerializer
 from rest_framework.response import Response
 from .tasks import send_email_task
 from django.conf import settings
+from rest_framework import status
 
-
-class TaskList(generics.ListAPIView):
+class TaskList(generics.ListCreateAPIView):
     permission_classes = (IsAuthorOrReadOnly,)
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
     def get_queryset(self):
         return super().get_queryset().filter(author=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     def list(self, request):
         queryset = self.get_queryset()
@@ -46,4 +49,19 @@ class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response({"status": "success"})
         else:
             return Response({"status": "error", "message": "Author email address not found"})
-    
+
+    def put(self, request, pk):
+        task = Task.objects.get(id=pk)
+        serializer = TaskSerializer(task, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
+        task = Task.objects.get(id=pk)
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
